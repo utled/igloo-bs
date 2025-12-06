@@ -1,0 +1,16 @@
+Field,Description
+Dev,"ID of device containing file (st_dev). This is the identifier for the filesystem (e.g., a specific disk partition) where the file resides."
+Ino,Inode number (st_ino). The inode is a unique identifier within the filesystem for the file.
+Nlink,Number of hard links (st_nlink). This count indicates how many directory entries (file paths) point to this specific inode.
+Mode,"File type and access permissions (st_mode). This is a bit field combining the file type (e.g., regular file, directory, symbolic link) and the standard rwxrwxrwx permissions."
+Uid,User ID of owner (st_uid). The numeric user ID of the file's owner.
+Gid,Group ID of owner (st_gid). The numeric group ID of the file's owning group.
+X__pad0,"Padding for structure alignment. These are typically unused bytes to ensure the fields align correctly in memory, which can vary by architecture."
+Rdev,"Device ID (if special file) (st_rdev). If the file is a character or block special device, this field contains the device's major and minor numbers."
+Size,"Total size, in bytes (st_size). For regular files, this is the exact size. For directories, it's typically the size of the directory entry structure."
+Blksize,Block size for filesystem I/O (st_blksize). The preferred block size for efficient I/O operations on this file.
+Blocks,"Number of 512B blocks allocated (st_blocks). The actual amount of disk space allocated for the file, counted in 512-byte blocks."
+Atim,Time of last access (st_atim). A Timespec structure indicating when the file data was last accessed/read.
+Mtim,Time of last modification (st_mtim). A Timespec structure indicating when the file data was last modified/written.
+Ctim,"Time of last status change (st_ctim). A Timespec structure indicating when the file's inode status (e.g., permissions, owner, or link count) was last changed."
+X__unused,"Unused/Reserved for future use or structure alignment, similar to X__pad0."
