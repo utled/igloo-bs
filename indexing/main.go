@@ -1,11 +1,13 @@
 package indexing
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sync"
 	"syscall"
@@ -42,8 +44,8 @@ type entryCollection struct {
 	groupID            uint32 // os.fileStat.sys.Gid
 	extension          string
 	fileType           string // MIME type. Determined by file extension and/or internal magic bytes
-	//contentSnippet     string   // short extract of the files content
-	//fullTextIndex      string   // the complete textual content of a document, stored in separate Full-Text Search index
+	contentSnippet     []byte // short extract of the files content. [:500] to start with
+	fullTextIndex      []byte // the complete textual content of a document, stored in separate Full-Text Search index
 	//tags               []string // user defined tags or keywords from internal metadata
 }
 
@@ -86,6 +88,27 @@ func readDir(path string, theWorks *collectedInfo, isRoot bool) {
 
 func readFile(filename string, theWorks *collectedInfo) {
 	entry := entryCollection{}
+
+	contentFiles := []string{".txt", ".md", ".go", ".py"}
+	if slices.Contains(contentFiles, filepath.Ext(filename)) {
+		contents, err := os.ReadFile(filename)
+		contents = bytes.ReplaceAll(contents, []byte("\n"), []byte(" "))
+		contents = bytes.ReplaceAll(contents, []byte("\r"), []byte(" "))
+		contents = bytes.ReplaceAll(contents, []byte("\t"), []byte(" "))
+
+		regExCleanup := regexp.MustCompile(`[\p{C}\p{Zl}\p{Zp}]`)
+		contents = regExCleanup.ReplaceAll(contents, []byte(" "))
+		contents = regexp.MustCompile(`\s+`).ReplaceAll(contents, []byte(" "))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(contents) < 500 {
+			entry.contentSnippet = contents
+		} else {
+			entry.contentSnippet = contents[:500]
+		}
+		entry.fullTextIndex = contents
+	}
 
 	fileStat, err := os.Stat(filename)
 	if err != nil {
@@ -216,4 +239,9 @@ func Main() {
 	fmt.Println("Number of directories: ", theWorks.numOfDirectories)
 	fmt.Println("Number of files: ", theWorks.numOfFiles)
 
+	for _, entry := range theWorks.entryDetails {
+		if entry.name == "Replanning.txt" {
+			fmt.Println(string(entry.contentSnippet))
+		}
+	}
 }
