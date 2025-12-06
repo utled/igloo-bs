@@ -37,15 +37,17 @@ type entryCollection struct {
 	isDir       bool
 	size        int64
 	//creationTime       int64 // Btim (not included syscall.Stat_t)
-	modificationTime   int64  // os.fileStat.modTime or os.fileStat.sys.Mtim.Sec + Mtim.Nsec
-	accessTime         int64  // os.fileStat.sys.Atim.Sec + Atim.Nsec
-	metaDataChangeTime int64  // os.fileStat.sys.Ctim.Sec + Ctim.Nsec
-	ownerID            uint32 // os.fileStat.sys.Uid
-	groupID            uint32 // os.fileStat.sys.Gid
-	extension          string
-	fileType           string // MIME type. Determined by file extension and/or internal magic bytes
-	contentSnippet     []byte // short extract of the files content. [:500] to start with
-	fullTextIndex      []byte // the complete textual content of a document, stored in separate Full-Text Search index
+	modificationTime     int64  // os.fileStat.modTime or os.fileStat.sys.Mtim.Sec + Mtim.Nsec
+	accessTime           int64  // os.fileStat.sys.Atim.Sec + Atim.Nsec
+	metaDataChangeTime   int64  // os.fileStat.sys.Ctim.Sec + Ctim.Nsec
+	ownerID              uint32 // os.fileStat.sys.Uid
+	groupID              uint32 // os.fileStat.sys.Gid
+	extension            string
+	fileType             string // MIME type. Determined by file extension and/or internal magic bytes
+	contentSnippet       []byte // short extract of the files content. [:500] to start with
+	fullTextIndex        []byte // the complete textual content of a document, stored in separate Full-Text Search index
+	lineCountTotal       int
+	lineCountWithContent int
 	//tags               []string // user defined tags or keywords from internal metadata
 }
 
@@ -92,6 +94,10 @@ func readFile(filename string, theWorks *collectedInfo) {
 	contentFiles := []string{".txt", ".md", ".go", ".py"}
 	if slices.Contains(contentFiles, filepath.Ext(filename)) {
 		contents, err := os.ReadFile(filename)
+		lineCountTotal := bytes.Count(contents, []byte("\n"))
+		blankLines := bytes.Count(contents, []byte("\n\n"))
+		lineCountWithContent := lineCountTotal - blankLines
+
 		contents = bytes.ReplaceAll(contents, []byte("\n"), []byte(" "))
 		contents = bytes.ReplaceAll(contents, []byte("\r"), []byte(" "))
 		contents = bytes.ReplaceAll(contents, []byte("\t"), []byte(" "))
@@ -108,6 +114,8 @@ func readFile(filename string, theWorks *collectedInfo) {
 			entry.contentSnippet = contents[:500]
 		}
 		entry.fullTextIndex = contents
+		entry.lineCountTotal = lineCountTotal
+		entry.lineCountWithContent = lineCountWithContent
 	}
 
 	fileStat, err := os.Stat(filename)
@@ -241,7 +249,10 @@ func Main() {
 
 	for _, entry := range theWorks.entryDetails {
 		if entry.name == "Replanning.txt" {
+			fmt.Println("file: ", entry.fullPath)
 			fmt.Println(string(entry.contentSnippet))
+			fmt.Println("lineCountTotal: ", entry.lineCountTotal)
+			fmt.Println("lineCountWithContent: ", entry.lineCountWithContent)
 		}
 	}
 }
