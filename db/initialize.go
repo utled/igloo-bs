@@ -28,14 +28,50 @@ func InitializeDB() error {
 }
 
 func createTables(db *sql.DB) error {
-	statements := []string{
-		`create table if not exists config ();`,
-		`create table if not exists full_scans ();`,
-		`create table if not exists entries ();`,
-		`create table if not exists changes ();`,
+	tableStatements := []string{
+		`create table if not exists config (
+    		type text unique not null primary key,
+    		priority integer not null default 0
+		);`,
+		`create table if not exists full_scans (
+    		scan_id int auto_increment primary key,
+         	scan_start text,
+         	scan_end text,
+         	scan_duration text,
+         	directory_count int,
+         	file_count int,
+         	file_w_content_count int,
+         	ignored_entries_count int
+         );`,
+		`create table if not exists entries (
+    		path text not null,
+    		parent_directory text,
+    		name text,
+    		is_dir boolean,
+    		size int,
+    		modification_time int,
+    		access_time int,
+    		metadata_change_time int,
+    		owner_id int,
+    		group_id int,
+    		extension text,
+    		filetype text,
+    		content_snippet text,
+    		full_text text
+		);`,
+		`create table if not exists ignored_entries (
+    		path text,
+    		error text
+		);`,
+		`create table if not exists changes (
+    		path text,
+    		field text,
+    		before text,
+        	after text
+		);`,
 	}
 
-	for _, statement := range statements {
+	for _, statement := range tableStatements {
 		_, err := db.Exec(statement)
 		if err != nil {
 			return fmt.Errorf("could not create table %s: \n%w", statement, err)
