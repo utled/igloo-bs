@@ -4,7 +4,8 @@
 - [x] set up file content reading
 - [x] set up db initialization (sqlite)
 - [] set up service initialization
-- [] write collected data to db
+- [x] write collected data to db
+- [] strategy for more efficient DB write on initial scan
 - [x] set up cli to manage program
 - [] set up orchestration
 - [] set up file system change monitoring

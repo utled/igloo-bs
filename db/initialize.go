@@ -36,14 +36,15 @@ func createTables(db *sql.DB) error {
     		priority integer not null default 0
 		);`,
 		`create table if not exists full_scans (
-    		scan_id int auto_increment primary key,
+    		scan_id int primary key,
          	scan_start text,
          	scan_end text,
          	scan_duration text,
          	directory_count int,
          	file_count int,
          	file_w_content_count int,
-         	ignored_entries_count int
+         	ignored_entries_count int,
+         	indexing_completed bool
          );`,
 		`create table if not exists entries (
     		path text not null,
