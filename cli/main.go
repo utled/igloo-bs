@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"snafu/indexing"
+	"snafu/setup"
 	"snafu/test"
 	"strings"
 )
@@ -18,6 +19,11 @@ func Main() {
 		switch arguments[0] {
 		case "test":
 			test.Main()
+		case "setup":
+			err := setup.Main()
+			if err != nil {
+				fmt.Println(err)
+			}
 		case "fullscan":
 			indexing.Main()
 		default:

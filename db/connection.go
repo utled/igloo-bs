@@ -7,8 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func CreateConnection() (*sql.DB, error) {
-	dbPath := "/home/utled/.snafu.db"
+func CreateConnection(dbPath string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %v", err)

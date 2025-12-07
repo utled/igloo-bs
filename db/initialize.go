@@ -3,12 +3,14 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 )
 
 type DefaultConfig struct{}
 
-func InitializeDB() error {
-	db, err := CreateConnection()
+func InitializeDB(servicePath string) error {
+	dbPath := filepath.Join(servicePath, "snafu.db")
+	db, err := CreateConnection(dbPath)
 	if err != nil {
 		return err
 	}
@@ -19,10 +21,10 @@ func InitializeDB() error {
 		return err
 	}
 
-	err = writeDefaultConfig(db)
-	if err != nil {
-		return err
-	}
+	/*	err = writeDefaultConfig(db)
+		if err != nil {
+			return err
+		}*/
 
 	return nil
 }
