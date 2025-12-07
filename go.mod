@@ -1,4 +1,4 @@
-module fDIX
+module snafu
 
 go 1.25
 

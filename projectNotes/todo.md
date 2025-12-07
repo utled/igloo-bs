@@ -3,8 +3,10 @@
 - [x] set up traversal and metadata collection
 - [x] set up file content reading
 - [] set up db initialization (sqlite)
+- [] set up service initialization
 - [] write collected data to db
 - [] set up cli to manage program
+- [] set up orchestration
 - [] set up file system change monitoring
   - [] decide sync and monitoring strategy
   - [] set up prioritization

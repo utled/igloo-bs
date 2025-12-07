@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fDIX/indexing"
+	"snafu/indexing"
 )
 
 func main() {
