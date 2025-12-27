@@ -47,7 +47,7 @@ func orchestrateScan(startPath string) error {
 	}
 
 	deletionProdWG.Add(1)
-	traverseMapEntries(deletionJobs, inodeMappedEntries, &deletionProdWG)
+	traverseIndexedEntries(deletionJobs, inodeMappedEntries, &deletionProdWG)
 
 	scannerWG.Add(entryScanners)
 	for i := 0; i < entryScanners; i += 1 {

@@ -18,7 +18,7 @@ func checkDelete(entryPath string, dbPath string) error {
 	return nil
 }
 
-func traverseMapEntries(deletionJobs chan<- string, inodeMappedEntries map[uint64]data.InodeHeader, wg *sync.WaitGroup) error {
+func traverseIndexedEntries(deletionJobs chan<- string, inodeMappedEntries map[uint64]data.InodeHeader, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	defer close(deletionJobs)
 
