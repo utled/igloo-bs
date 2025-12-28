@@ -13,6 +13,7 @@
   - [] set up prioritization
   - [x] implement workflow
   - [] implement change logging
+- [] set up better error handling
 - [] implement basic search
 - [] implement additional tagging
 - [] figure out what else it's supposed to do

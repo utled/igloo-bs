@@ -2,6 +2,7 @@ package maintain
 
 import (
 	"database/sql"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -14,6 +15,7 @@ import (
 )
 
 func traverseNewDir(readJobs chan<- data.SyncJob, startPath string, con *sql.DB) error {
+	fmt.Println("Traversing new dir: ", startPath)
 	inodeMappedEntries, err := data.GetInodeMappedEntries(con)
 	if err != nil {
 		return err
@@ -22,11 +24,17 @@ func traverseNewDir(readJobs chan<- data.SyncJob, startPath string, con *sql.DB)
 		if err != nil {
 			return err
 		}
-		var syncJob data.SyncJob
+
+		if d.IsDir() && slices.Contains(utils.ExcludedEntries, filepath.Base(path)) {
+			return filepath.SkipDir
+		}
+
 		entryStat, err := os.Stat(path)
 		if err != nil {
 			return err
 		}
+
+		var syncJob data.SyncJob
 		entryStatT := entryStat.Sys().(*syscall.Stat_t)
 		if inode, ok := inodeMappedEntries[entryStatT.Ino]; ok {
 			entryMtim := entryStatT.Mtim.Sec + entryStatT.Mtim.Nsec
@@ -51,12 +59,12 @@ func traverseNewDir(readJobs chan<- data.SyncJob, startPath string, con *sql.DB)
 }
 
 func traverseDirectories(
-	startPath string,
 	scanJobs chan<- data.InodeHeader,
 	newDirJobs chan<- string,
 	readJobs chan<- data.SyncJob,
-	wg *sync.WaitGroup,
+	startPath string,
 	inodeMappedEntries map[uint64]data.InodeHeader,
+	wg *sync.WaitGroup,
 ) {
 	defer wg.Done()
 
@@ -65,13 +73,13 @@ func traverseDirectories(
 			return err
 		}
 
+		if d.IsDir() && slices.Contains(utils.ExcludedEntries, filepath.Base(path)) {
+			return filepath.SkipDir
+		}
+
 		entryStat, err := os.Stat(path)
 		if err != nil {
 			return err
-		}
-
-		if d.IsDir() && slices.Contains(utils.ExcludedEntries, filepath.Base(path)) {
-			return filepath.SkipDir
 		}
 
 		statT := entryStat.Sys().(*syscall.Stat_t)
@@ -84,9 +92,9 @@ func traverseDirectories(
 					if inode != statT.Ino {
 						continue
 					}
-					mtim := statT.Mtim.Sec + statT.Mtim.Nsec
-					ctim := statT.Ctim.Sec + statT.Ctim.Nsec
-					if values.ModificationTime != mtim || values.MetaDataChangeTime != ctim {
+					mTim := statT.Mtim.Sec + statT.Mtim.Nsec
+					cTim := statT.Ctim.Sec + statT.Ctim.Nsec
+					if values.ModificationTime != mTim || values.MetaDataChangeTime != cTim {
 						readJobs <- data.SyncJob{Path: path, IsIndexed: true, IsContentChange: false}
 						scanJobs <- values
 						continue

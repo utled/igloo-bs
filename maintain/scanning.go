@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"snafu/data"
+	"snafu/utils"
 	"syscall"
 )
 
@@ -16,17 +18,24 @@ func scanUpdatedDir(readJobs chan<- data.SyncJob, dirPath string, inodeMappedEnt
 
 	for _, entry := range fileSysEntries {
 		filePath := filepath.Join(dirPath, entry.Name())
+
 		entryStat, err := os.Stat(filePath)
 		if err != nil {
 			return err
+		}
+
+		if entryStat.IsDir() && slices.Contains(utils.ExcludedEntries, filepath.Base(filePath)) {
+			continue
 		}
 
 		entryStatT := entryStat.Sys().(*syscall.Stat_t)
 		entryMtim := entryStatT.Mtim.Sec + entryStatT.Mtim.Nsec
 
 		if inode, ok := inodeMappedEntries[entryStatT.Ino]; !ok {
-			syncJob := data.SyncJob{Path: filePath, IsIndexed: false, IsContentChange: !entry.IsDir()}
-			readJobs <- syncJob
+			if !entryStat.IsDir() {
+				syncJob := data.SyncJob{Path: filePath, IsIndexed: false, IsContentChange: true}
+				readJobs <- syncJob
+			}
 		} else {
 			if entryMtim != inode.ModificationTime {
 				syncJob := data.SyncJob{Path: filePath, IsIndexed: true, IsContentChange: !entry.IsDir()}

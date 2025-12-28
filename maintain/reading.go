@@ -19,6 +19,7 @@ func readEntry(syncJob data.SyncJob, con *sql.DB) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	entry := data.EntryCollection{}
 
 	entry.FullPath = syncJob.Path
@@ -28,6 +29,7 @@ func readEntry(syncJob data.SyncJob, con *sql.DB) {
 	entry.Size = entryStat.Size()
 
 	statT := entryStat.Sys().(*syscall.Stat_t)
+
 	entry.Inode = statT.Ino
 	entry.ModificationTime = statT.Mtim.Sec + statT.Mtim.Nsec
 	entry.AccessTime = statT.Atim.Sec + statT.Atim.Nsec

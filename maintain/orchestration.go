@@ -79,7 +79,7 @@ func orchestrateScan(startPath string) error {
 	}
 
 	producerWG.Add(1)
-	go traverseDirectories(startPath, scanJobs, newDirJobs, readJobs, &producerWG, inodeMappedEntries)
+	go traverseDirectories(scanJobs, newDirJobs, readJobs, startPath, inodeMappedEntries, &producerWG)
 
 	producerWG.Wait()
 	close(scanJobs)

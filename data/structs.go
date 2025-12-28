@@ -46,11 +46,6 @@ type NotAccessedPaths struct {
 	Err  string
 }
 
-type UpdatedDirs struct {
-	path string
-	mu   sync.Mutex
-}
-
 type SyncJob struct {
 	Path            string
 	IsIndexed       bool

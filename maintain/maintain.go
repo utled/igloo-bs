@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	longScope  = "/home/utled/GolandProjects"
+	longScope  = "/home/utled/GolandProjects/snafu"
 	shortScope = "/home/utled/GolandProjects/snafu"
 )
 
@@ -23,13 +23,13 @@ func Start() error {
 		}
 
 		fmt.Printf("Starting scan of: %s\n", startPath)
-		start := time.Now()
+		startTime := time.Now()
 		err = orchestrateScan(startPath)
 		if err != nil {
 			return err
 		}
 		fmt.Println("Scan completed")
-		elapsed := time.Since(start)
+		elapsed := time.Since(startTime)
 		fmt.Printf("Scan took %s\n", elapsed)
 
 		time.Sleep(1 * time.Second)
