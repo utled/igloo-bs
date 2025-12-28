@@ -3,13 +3,12 @@ package data
 import (
 	"database/sql"
 	"fmt"
-	"snafu/db"
 )
 
-func checkTableExists(db *sql.DB, tableName string) (bool, error) {
+func checkTableExists(con *sql.DB, tableName string) (bool, error) {
 	query := `SELECT name FROM sqlite_master WHERE type='table' AND name=?`
 
-	row := db.QueryRow(query, tableName)
+	row := con.QueryRow(query, tableName)
 
 	var name string
 	err := row.Scan(&name)
@@ -24,18 +23,7 @@ func checkTableExists(db *sql.DB, tableName string) (bool, error) {
 	}
 }
 
-func ClearExistingData(dbPath string) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func ClearExistingData(con *sql.DB) error {
 	entriesExist, err := checkTableExists(con, "entries")
 	if err != nil {
 		return err
@@ -61,18 +49,7 @@ func ClearExistingData(dbPath string) error {
 	return nil
 }
 
-func WriteFullEntries(dbPath string, entryCollection []*EntryCollection) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func WriteFullEntries(con *sql.DB, entryCollection []*EntryCollection) error {
 	query := `insert into entries(
                     inode,
                     path,
@@ -94,7 +71,7 @@ func WriteFullEntries(dbPath string, entryCollection []*EntryCollection) error {
 					values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	for _, entry := range entryCollection {
-		_, err = con.Exec(
+		_, err := con.Exec(
 			query,
 			entry.Inode,
 			entry.FullPath,
@@ -122,18 +99,7 @@ func WriteFullEntries(dbPath string, entryCollection []*EntryCollection) error {
 	return nil
 }
 
-func UpdateEntriesWithContent(dbPath string, entryCollection []*EntryCollection) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func UpdateEntriesWithContent(con *sql.DB, entryCollection []*EntryCollection) error {
 	query := `update entries
     		  set 
                   path = ?,
@@ -154,7 +120,7 @@ func UpdateEntriesWithContent(dbPath string, entryCollection []*EntryCollection)
                   line_count_w_content = ?
 			  where inode = ?`
 	for _, entry := range entryCollection {
-		_, err = con.Exec(
+		_, err := con.Exec(
 			query,
 			entry.FullPath,
 			entry.ParentDirID,
@@ -182,18 +148,7 @@ func UpdateEntriesWithContent(dbPath string, entryCollection []*EntryCollection)
 	return nil
 }
 
-func UpdateEntriesWithoutContent(dbPath string, entryCollection []*EntryCollection) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func UpdateEntriesWithoutContent(con *sql.DB, entryCollection []*EntryCollection) error {
 	query := `update entries
     		  set 
                   path = ?,
@@ -211,7 +166,7 @@ func UpdateEntriesWithoutContent(dbPath string, entryCollection []*EntryCollecti
 			  where inode = ?`
 
 	for _, entry := range entryCollection {
-		_, err = con.Exec(
+		_, err := con.Exec(
 			query,
 			entry.FullPath,
 			entry.ParentDirID,
@@ -235,22 +190,11 @@ func UpdateEntriesWithoutContent(dbPath string, entryCollection []*EntryCollecti
 	return nil
 }
 
-func WriteNotRegisteredEntries(dbPath string, notRegistered []*NotAccessedPaths) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func WriteNotRegisteredEntries(con *sql.DB, notRegistered []*NotAccessedPaths) error {
 	query := `insert into ignored_entries(path, error) values(?, ?)`
 
 	for _, entry := range notRegistered {
-		_, err = con.Exec(query, entry.Path, entry.Err)
+		_, err := con.Exec(query, entry.Path, entry.Err)
 		if err != nil {
 			return fmt.Errorf("could not write entry to database: %s\n%w", query, err)
 		}
@@ -259,18 +203,7 @@ func WriteNotRegisteredEntries(dbPath string, notRegistered []*NotAccessedPaths)
 	return nil
 }
 
-func WriteScanRecord(dbPath string, theWorks *CollectedInfo) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func WriteScanRecord(con *sql.DB, theWorks *CollectedInfo) error {
 	query := `insert into full_scans(
                     scan_start,
 					scan_end,
@@ -282,7 +215,7 @@ func WriteScanRecord(dbPath string, theWorks *CollectedInfo) error {
 				    indexing_completed)
 					values (?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err = con.Exec(
+	_, err := con.Exec(
 		query,
 		theWorks.ScanStart,
 		theWorks.ScanEnd,
@@ -298,20 +231,9 @@ func WriteScanRecord(dbPath string, theWorks *CollectedInfo) error {
 	return nil
 }
 
-func DeleteEntry(entryPath string, dbPath string) error {
-	con, err := db.CreateConnection(dbPath)
-	if err != nil {
-		return err
-	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
-
+func DeleteEntry(con *sql.DB, entryPath string) error {
 	query := `delete from entries where path = ?`
-	_, err = con.Exec(query, entryPath)
+	_, err := con.Exec(query, entryPath)
 	if err != nil {
 		return fmt.Errorf("could not delete entry from database: %s\n%w", query, err)
 	}

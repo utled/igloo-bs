@@ -1,6 +1,7 @@
 package maintain
 
 import (
+	"database/sql"
 	"io/fs"
 	"log"
 	"os"
@@ -12,27 +13,11 @@ import (
 	"syscall"
 )
 
-func traverseNewDir(readJobs chan<- data.SyncJob, startPath string, dbPath string) error {
-	/*
-		allInodeMappedEntries, err := data.GetInodeMappedEntries("", dbPath)
-		if err != nil {
-			return err
-		}
-	*/
-	inodeMappedEntries, err := data.GetInodeMappedEntries(dbPath)
+func traverseNewDir(readJobs chan<- data.SyncJob, startPath string, con *sql.DB) error {
+	inodeMappedEntries, err := data.GetInodeMappedEntries(con)
 	if err != nil {
 		return err
 	}
-
-	/*
-		allInodesSorted := make([]uint64, 0, len(allInodeMappedEntries))
-		for inode := range allInodeMappedEntries {
-			allInodesSorted = append(allInodesSorted, inode)
-		}
-		sort.Slice(allInodesSorted, func(i, j int) bool {
-			return allInodesSorted[i] < allInodesSorted[j]
-		})
-	*/
 	err = filepath.WalkDir(startPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -58,27 +43,6 @@ func traverseNewDir(readJobs chan<- data.SyncJob, startPath string, dbPath strin
 				syncJob = data.SyncJob{Path: path, IsIndexed: false, IsContentChange: true}
 			}
 		}
-
-		/*
-
-			_, exists := slices.BinarySearch(allInodesSorted, entryStatT.Ino)
-			if exists {
-				entryMtim := entryStatT.Mtim.Sec + entryStatT.Mtim.Nsec
-				indexedMtim := allInodeMappedEntries[entryStatT.Ino].ModificationTime
-				if entryStat.IsDir() || entryMtim == indexedMtim {
-					syncJob = data.SyncJob{Path: path, IsIndexed: true, IsContentChange: false}
-				} else {
-					syncJob = data.SyncJob{Path: path, IsIndexed: true, IsContentChange: true}
-				}
-			} else {
-				if entryStat.IsDir() {
-					syncJob = data.SyncJob{Path: path, IsIndexed: false, IsContentChange: false}
-				} else {
-					syncJob = data.SyncJob{Path: path, IsIndexed: false, IsContentChange: true}
-				}
-			}
-
-		*/
 		readJobs <- syncJob
 		return nil
 	})

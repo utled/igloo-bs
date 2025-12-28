@@ -1,15 +1,16 @@
 package maintain
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"snafu/data"
 	"sync"
 )
 
-func checkDelete(entryPath string, dbPath string) error {
+func checkDelete(entryPath string, con *sql.DB) error {
 	if _, err := os.Stat(entryPath); err != nil {
-		err = data.DeleteEntry(entryPath, dbPath)
+		err = data.DeleteEntry(con, entryPath)
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -1,10 +1,12 @@
 package maintain
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
 	"snafu/data"
+	"snafu/db"
 	"sync"
 )
 
@@ -25,7 +27,19 @@ func orchestrateScan(startPath string) error {
 		return err
 	}
 	dbPath := filepath.Join(homePath, ".snafu", "snafu.db")
-	inodeMappedEntries, err := data.GetInodeMappedEntries(dbPath)
+
+	con, err := db.CreateConnection(dbPath)
+	if err != nil {
+		return err
+	}
+	defer func(con *sql.DB) {
+		err = db.CloseConnection(con)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(con)
+
+	inodeMappedEntries, err := data.GetInodeMappedEntries(con)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -43,7 +57,7 @@ func orchestrateScan(startPath string) error {
 
 	deletionWG.Add(deletionWorkers)
 	for i := 0; i < deletionWorkers; i++ {
-		go deletionWorker(deletionJobs, dbPath, &deletionWG)
+		go deletionWorker(deletionJobs, con, &deletionWG)
 	}
 
 	deletionProdWG.Add(1)
@@ -56,12 +70,12 @@ func orchestrateScan(startPath string) error {
 
 	scannerWG.Add(newDirWorkers)
 	for i := 0; i < newDirWorkers; i += 1 {
-		go newDirWorker(newDirJobs, readJobs, dbPath, &scannerWG)
+		go newDirWorker(newDirJobs, readJobs, con, &scannerWG)
 	}
 
 	readerWG.Add(entryReaders)
 	for i := 0; i < entryReaders; i += 1 {
-		go readWorker(readJobs, dbPath, &readerWG)
+		go readWorker(readJobs, con, &readerWG)
 	}
 
 	producerWG.Add(1)

@@ -2,6 +2,7 @@ package maintain
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"syscall"
 )
 
-func readEntry(syncJob data.SyncJob, dbPath string) {
+func readEntry(syncJob data.SyncJob, con *sql.DB) {
 	entryStat, err := os.Stat(syncJob.Path)
 	if err != nil {
 		fmt.Println(err)
@@ -66,20 +67,20 @@ func readEntry(syncJob data.SyncJob, dbPath string) {
 	entryCollection := make([]*data.EntryCollection, 1)
 	entryCollection[0] = &entry
 	if !syncJob.IsIndexed {
-		err := data.WriteFullEntries(dbPath, entryCollection)
+		err := data.WriteFullEntries(con, entryCollection)
 		if err != nil {
 			fmt.Println("error writing: ", entry.FullPath, err)
 		}
 		return
 	}
 	if syncJob.IsContentChange {
-		err := data.UpdateEntriesWithContent(dbPath, entryCollection)
+		err := data.UpdateEntriesWithContent(con, entryCollection)
 		if err != nil {
 			fmt.Println("error updating: ", entry.FullPath, err)
 		}
 		return
 	}
-	err = data.UpdateEntriesWithoutContent(dbPath, entryCollection)
+	err = data.UpdateEntriesWithoutContent(con, entryCollection)
 	if err != nil {
 		fmt.Println("error updating: ", entry.FullPath, err)
 	}

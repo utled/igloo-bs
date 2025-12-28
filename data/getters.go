@@ -3,21 +3,13 @@ package data
 import (
 	"database/sql"
 	"fmt"
-	"snafu/db"
 )
 
-func GetInodeMappedEntries(dbPath string) (inodeMappedEntries map[uint64]InodeHeader, err error) {
+func GetInodeMappedEntries(con *sql.DB) (inodeMappedEntries map[uint64]InodeHeader, err error) {
 	inodeMappedEntries = make(map[uint64]InodeHeader)
-	con, err := db.CreateConnection(dbPath)
 	if err != nil {
 		return inodeMappedEntries, err
 	}
-	defer func(con *sql.DB) {
-		err = db.CloseConnection(con)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(con)
 	var query string
 	var response *sql.Rows
 	query = `select inode, path, modification_time, metadata_change_time 
@@ -39,7 +31,7 @@ func GetInodeMappedEntries(dbPath string) (inodeMappedEntries map[uint64]InodeHe
 		}
 		inodeMappedEntries[inode] = details
 	}
-	if err := response.Err(); err != nil {
+	if err = response.Err(); err != nil {
 		return inodeMappedEntries, fmt.Errorf("failed to iterate through db response: %v", err)
 	}
 

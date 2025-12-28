@@ -1,61 +1,69 @@
 package initial
 
 import (
-	"io/fs"
+	"fmt"
 	"log"
 	"os"
-	"path/filepath"
-	"slices"
 	"snafu/data"
-	"snafu/utils"
 	"sync"
+	"time"
 )
 
-func traverseDirectory(
-	root string,
-	dirJobs chan<- string,
-	fileJobs chan<- string,
-	wg *sync.WaitGroup,
-	theWorks *data.CollectedInfo,
-) {
-	defer wg.Done()
+const (
+	directoryWorkers       = 20
+	fileWorkers            = 80
+	directoryJobBufferSize = 100
+	fileJobBufferSize      = 500
+)
 
-	defer close(dirJobs)
-	defer close(fileJobs)
+func StartInitialScan() {
+	start := time.Now()
+	theWorks := data.CollectedInfo{}
 
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			failedPath := data.NotAccessedPaths{Path: path, Err: err.Error()}
-			theWorks.Mu.Lock()
-			theWorks.NumOfIgnoredEntries += 1
-			theWorks.NotRegistered = append(theWorks.NotRegistered, &failedPath)
-			theWorks.Mu.Unlock()
-			return nil
-		}
+	fileReadJobs := make(chan string, fileJobBufferSize)
+	dirReadJobs := make(chan string, directoryJobBufferSize)
 
-		if path == root {
-			return nil
-		}
+	var wg sync.WaitGroup
+	totalWorkers := 1 + directoryWorkers + fileWorkers
+	wg.Add(totalWorkers)
 
-		_, err = os.Stat(path)
-		if err != nil {
-			return nil
-		}
-
-		if d.IsDir() && slices.Contains(utils.ExcludedEntries, filepath.Base(path)) {
-			return filepath.SkipDir
-		}
-
-		if d.IsDir() {
-			dirJobs <- path
-		} else {
-			fileJobs <- path
-		}
-
-		return nil
-	})
-
+	path := "/home/utled/GolandProjects"
+	stat, err := os.Stat(path)
 	if err != nil {
-		log.Printf("Fatal error during directory traversal: %v", err)
+		log.Fatal(err)
 	}
+	if !stat.IsDir() {
+		log.Fatal("Starting path must be a directory")
+	}
+	readDir(path, &theWorks, true)
+
+	for i := 0; i < directoryWorkers; i += 1 {
+		go dirWorker(dirReadJobs, &wg, &theWorks)
+	}
+
+	for i := 0; i < fileWorkers; i += 1 {
+		go fileWorker(fileReadJobs, &wg, &theWorks)
+	}
+
+	go traverseDirectory(path, dirReadJobs, fileReadJobs, &wg, &theWorks)
+
+	wg.Wait()
+	end := time.Now()
+	elapsed := end.Sub(start)
+
+	fmt.Printf("Full scan took %s\n", elapsed)
+
+	theWorks.Mu.Lock()
+	theWorks.ScanStart = start
+	theWorks.ScanEnd = end
+	theWorks.ScanDuration = elapsed
+	theWorks.Mu.Unlock()
+
+	writeStart := time.Now()
+	err = updateFullIndex(&theWorks)
+	if err != nil {
+		fmt.Println(err)
+	}
+	writeElapsed := time.Since(writeStart)
+	fmt.Printf("Full dbWrite took %s\n", writeElapsed)
 }

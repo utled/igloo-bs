@@ -1,6 +1,7 @@
 package maintain
 
 import (
+	"database/sql"
 	"log"
 	"snafu/data"
 	"sync"
@@ -15,25 +16,25 @@ func scanWorker(scanJobs <-chan data.InodeHeader, readJobs chan<- data.SyncJob, 
 		}
 	}
 }
-func readWorker(readJobs <-chan data.SyncJob, dbPath string, wg *sync.WaitGroup) {
+func readWorker(readJobs <-chan data.SyncJob, con *sql.DB, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range readJobs {
-		readEntry(job, dbPath)
+		readEntry(job, con)
 	}
 }
-func newDirWorker(newDirJobs <-chan string, readJobs chan<- data.SyncJob, dbPath string, wg *sync.WaitGroup) {
+func newDirWorker(newDirJobs <-chan string, readJobs chan<- data.SyncJob, con *sql.DB, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for path := range newDirJobs {
-		err := traverseNewDir(readJobs, path, dbPath)
+		err := traverseNewDir(readJobs, path, con)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 }
-func deletionWorker(delJobs <-chan string, dbPath string, wg *sync.WaitGroup) {
+func deletionWorker(delJobs <-chan string, con *sql.DB, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for path := range delJobs {
-		err := checkDelete(path, dbPath)
+		err := checkDelete(path, con)
 		if err != nil {
 			log.Fatal(err)
 		}
