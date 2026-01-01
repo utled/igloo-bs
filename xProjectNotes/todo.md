@@ -32,4 +32,4 @@
 - [x] interactive rows
 - [x] implement "per keystroke"-search instead of on enter
 - [x] implement preview pane
-- [] update db connection persistency
+- [x] update db connection persistency
