@@ -35,3 +35,21 @@ func Index(con *sql.DB, searchString string) (searchResults []data.SearchResult,
 
 	return searchResults, nil
 }
+
+func ContentSnippet(con *sql.DB, pathString string) (contentSnippet string, err error) {
+	var result sql.NullString
+	query := "SELECT content_snippet FROM entries WHERE path = ? LIMIT 1"
+	err = con.QueryRow(query, pathString).Scan(&result)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", fmt.Errorf("failed to scan content snippet: %v", err)
+	}
+
+	if result.Valid {
+		contentSnippet = result.String
+	}
+
+	return contentSnippet, nil
+}

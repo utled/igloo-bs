@@ -28,8 +28,7 @@ func UI() {
 		}
 	}(con)
 
-	model := NewModel()
-	model.dbConnection = con
+	model := NewModel(con)
 	program := tea.NewProgram(model, tea.WithAltScreen())
 	_, err = program.Run()
 	if err != nil {
