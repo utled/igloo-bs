@@ -13,10 +13,21 @@
   - [] set up prioritization
   - [x] implement workflow
   - [] implement change logging
-- [] set up better error handling
-- [] implement basic search
+- [] set up better error handling and logging
+- [x] implement basic search
+- [x] implement TUI for search
+- [] figure out and implement advanced search
 - [] implement additional tagging
 - [] figure out what else it's supposed to do
 - [] figure out what to do in life
 
-- [] build TUI (later)
+# BUG FIXES & CHANGES
+## General
+- [] change time representations from combined Sec+Nsec to separate values to be able to display them as correct datetimes
+- [] fix the multiplied creation of new directories
+- [] 
+
+## TUI
+- [] try to get scrollable columns
+- [] interactive rows
+- [] implement "per keystroke"-search instead of on enter

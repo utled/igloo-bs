@@ -57,3 +57,12 @@ type InodeHeader struct {
 	ModificationTime   int64
 	MetaDataChangeTime int64
 }
+
+type SearchResult struct {
+	Path               string
+	Name               string
+	Size               int64
+	ModificationTime   int64
+	AccessTime         int64
+	MetaDataChangeTime int64
+}
