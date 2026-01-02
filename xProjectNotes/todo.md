@@ -17,7 +17,7 @@
 - [x] implement basic search
 - [x] implement TUI for search
 - [] figure out and implement advanced search
-- [] implement additional tagging
+- [x] implement additional tagging
 - [] figure out what else it's supposed to do
 - [] figure out what to do in life
 
