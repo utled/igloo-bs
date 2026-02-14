@@ -9,7 +9,7 @@ import (
 type DefaultConfig struct{}
 
 func InitializeDB(servicePath string) error {
-	dbPath := filepath.Join(servicePath, "icu.db")
+	dbPath := filepath.Join(servicePath, "ibs.db")
 	db, err := CreateConnection(dbPath)
 	if err != nil {
 		return err

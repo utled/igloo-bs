@@ -1,4 +1,4 @@
-# icu
-**Index Core Utility**<br><br>
+# ibs
+**Index Browser Service**<br><br>
 
 wip

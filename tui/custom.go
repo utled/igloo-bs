@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"icu/data"
-	"icu/search"
+	"ibs/data"
+	"ibs/search"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"

@@ -1,4 +1,4 @@
-module icu
+module ibs
 
 go 1.25
 

@@ -4,11 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"icu/initial"
-	"icu/maintain"
-	"icu/setup"
-	"icu/tui"
-	"icu/xTest"
+	"ibs/tui"
+	//"ibs/Test"
 	"strings"
 )
 
@@ -20,16 +17,7 @@ func Main() {
 		arguments := strings.Split(strings.TrimSpace(input), " ")
 		switch arguments[0] {
 		case "test":
-			test.Main()
-		case "setup":
-			err := setup.Main()
-			if err != nil {
-				fmt.Println(err)
-			}
-		case "fullscan":
-			initial.StartInitialScan()
-		case "sync":
-			maintain.Start()
+		//test.Main()
 		case "tui":
 			tui.UI()
 		default:

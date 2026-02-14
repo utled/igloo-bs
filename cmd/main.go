@@ -1,7 +1,7 @@
 package main
 
 import (
-	"icu/cli"
+	"ibs/cli"
 )
 
 func main() {

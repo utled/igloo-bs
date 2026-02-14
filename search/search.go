@@ -3,7 +3,7 @@ package search
 import (
 	"database/sql"
 	"fmt"
-	"icu/data"
+	"ibs/data"
 )
 
 func Index(con *sql.DB, searchString string) (searchResults []data.SearchResult, err error) {
