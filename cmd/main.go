@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ibs/cli"
+	"igloo/cli"
 )
 
 func main() {

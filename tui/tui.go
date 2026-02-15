@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"ibs/db"
+	"igloo/db"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

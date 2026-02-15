@@ -1,4 +1,4 @@
-module ibs
+module igloo
 
 go 1.25
 

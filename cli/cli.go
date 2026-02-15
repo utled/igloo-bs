@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"ibs/tui"
-	//"ibs/Test"
+	"igloo/tui"
+	//"igloo/Test"
 	"strings"
 )
 
